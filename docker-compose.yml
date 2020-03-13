@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+        chatapp:
+                image: chatapp
+                ports: 
+                - "8080"
+                environment: 
+                  - SERVICE_PORTS=8080
+                #deploy:
+                #        replicas: 2
+                #        update_config:
+                #                delay: 10s
+                #        restart_policy:
+                #                condition: on-failure
+                #                max_attempts: 3
+                #                window: 120s
+                tty: true
+        
+        proxy:
+                image: haproxy
+                depends_on:
+                        - chatapp
+                environment:
+                        - BALANCE=leastconn
+                volumes:
+                        - /var/run/docker.sock:/var/run/docker.sock
+                ports:
+                        - "80:80"
+                networks:
+                        - web
+                tty: true
+networks:
+        web:
+                        
