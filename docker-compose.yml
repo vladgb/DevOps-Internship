@@ -1,0 +1,22 @@
+services:
+  chat1:
+    build:
+      context: ./dockerNode
+      dockerfile: Dockerfile
+  chat2:
+    build:
+      context: ./dockerNode
+      dockerfile: Dockerfile
+
+  haproxy:
+    build:
+      context: /home/potorandrei/dockerCompose
+      dockerfile: HAPXY_Dockerfile
+    links:
+    - chat1
+    - chat2
+    ports:
+    - published: 80
+      target: 80
+version: '3.7'
+
