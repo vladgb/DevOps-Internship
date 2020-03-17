@@ -1,11 +1,33 @@
-# creeaza containerul daca nu exista
-docker run -d -p 8086:8086 -v influxdb:/var/lib/influxdb --name influxdb influxdb
-#porneste containerul
-docker start influxdb
+# sterge toate containerele existente
+docker container stop $(docker container ls -aq)
+docker container rm $(docker container ls -aq)
 
-# cu comanda de mai jos pot face requesturi la influxdb, dar inca nu am reusit sa le transfer in telegraf
-# curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=testdb" --data-urlencode "q=SELECT * FROM sensor1"
+# creeaza containerul influxdb
+docker run -d \
+  --name=influxdb \
+  -p 8086:8086 \
+  -v influx-vol:/var/lib/influxdb \
+  influxdb
 
-# citeste de pe localhost:8086 cu telegraf, dar nu am reusit sa fac query-uri specifice
-# output in stdout si ./metrics.out 
+# asteapta crearea containerului
+for i in {10..1}
+do
+   echo "Waiting for initialization: $i"
+   sleep 1
+done
+
+# creeaza baza de date - aici o si creez - nush dc nu o vede
+curl -POST http://localhost:8086/query --data-urlencode "q=CREATE DATABASE telegraf"
+
+sleep 2
+
+# creeaza container grafana
+docker run -d -v grafana-vol:/var/lib/grafana -p 3000:3000 --link influxdb --name=grafana grafana/grafana
+
+# adauga in retea
+docker network connect monitoring influxdb
+# conectare la reteaua de monitoring  
+docker network connect monitoring grafana
+
+# porneste telegraf
 telegraf --config telegraf.config 
