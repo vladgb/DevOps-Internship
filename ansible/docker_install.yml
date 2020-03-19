@@ -23,8 +23,10 @@
         name: lvm2
         state: latest
 
-    - name: pls work
-      command: dnf install https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm -y
+    - name: Remove Podman
+      dnf:
+        name: podman
+        state: absent
 
     - name: make sure dnf-plugins.core installed
       dnf:
@@ -37,8 +39,14 @@
     - name: dnf list docker-ce
       command: dnf list docker-ce
 
+    - name: dnf list docker-ce-cli
+      command: dnf list docker-ce-cli
+
     - name: Install docker
-      command: dnf install docker-ce -y
+      command: dnf install docker-ce docker-ce-cli containerd.io --nobest -y
+
+    - name: Install docker python dependency
+      command: pip3 install docker
 
     - name: Make sure a service is running
       systemd:
@@ -50,3 +58,9 @@
         name: docker
         enabled: yes
         masked: no
+
+    - name: add "ansible" user to "docker" group
+      command: usermod -aG docker ansible
+
+    - name: reloading user for changes
+      meta: reset_connection

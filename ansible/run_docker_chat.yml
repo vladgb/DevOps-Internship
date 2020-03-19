@@ -1,0 +1,17 @@
+---
+- name: Install Docker
+  gather_facts: No
+  hosts: web
+  become: yes
+ 
+  tasks:
+    - name: pull chat image
+      docker_image:
+        name: "elvismatic/chat"
+        source: pull
+
+    - name: initiate the container
+      docker_container:
+        name: "chat"
+        image: "elvismatic/chat"
+        state: present
